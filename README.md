@@ -9,17 +9,19 @@ Não é um jogo: é um **observador ao vivo** (telemetria viva) com estética de
 
 ## Status
 
-🟢 **Mission Control · M2** — app de **abas**: a aba **Office** é o prédio de agência
-(fosso d'água, lobby "Agency HQ", uma sala por projeto, câmera pan/zoom) e a aba
-**Dashboard** mostra métricas ao vivo — agentes ativos, sessões e **gasto de API em
-tempo real** (somando os tokens dos transcripts × preço por modelo). Rode com
+🟢 **Mission Control · M3** — app de **abas**: **Office** (prédio de agência com
+fosso d'água, lobby "Agency HQ", uma sala por projeto, câmera pan/zoom), **Dashboard**
+(métricas ao vivo — agentes ativos, sessões e **gasto de API em tempo real**, somando
+os tokens dos transcripts × preço por modelo) e **Memory** — navegador read-only dos
+arquivos `.md` da operação (auto-memória, definições de agentes, skills, CLAUDE.md),
+agrupados por categoria e renderizados como markdown. Rode com
 `npm install && npm run dev`, abra `http://localhost:4500`.
 
 - Roadmap Mission Control: [`docs/superpowers/specs/2026-06-18-mission-control-roadmap.md`](docs/superpowers/specs/2026-06-18-mission-control-roadmap.md)
 - Design do office: [`docs/superpowers/specs/2026-06-18-agency-hq-2d-office-design.md`](docs/superpowers/specs/2026-06-18-agency-hq-2d-office-design.md)
-- Planos: [Fase 1](docs/superpowers/plans/2026-06-18-agency-hq-phase1-uma-sala-ao-vivo.md) · [Fase 2](docs/superpowers/plans/2026-06-18-agency-hq-phase2-predio-multi-sessao.md) · [MC M1](docs/superpowers/plans/2026-06-18-mc-m1-office-por-projeto.md) · [MC M2](docs/superpowers/plans/2026-06-18-mc-m2-shell-dashboard.md)
+- Planos: [Fase 1](docs/superpowers/plans/2026-06-18-agency-hq-phase1-uma-sala-ao-vivo.md) · [Fase 2](docs/superpowers/plans/2026-06-18-agency-hq-phase2-predio-multi-sessao.md) · [MC M1](docs/superpowers/plans/2026-06-18-mc-m1-office-por-projeto.md) · [MC M2](docs/superpowers/plans/2026-06-18-mc-m2-shell-dashboard.md) · [MC M3](docs/superpowers/plans/2026-06-18-mc-m3-memory-browser.md)
 
-Próximo: MC M3 — Memory (.md browser) → M4 Org chart → M5 Tasks.
+Próximo: MC M4 — Org chart → M5 Tasks.
 
 ## Como funciona (resumo)
 
