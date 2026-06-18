@@ -1,11 +1,11 @@
-export function connect(onState) {
+export function connect(onBuilding) {
   let ws
   function open() {
     ws = new WebSocket(`ws://${location.host}`)
     ws.onmessage = (ev) => {
       try {
         const msg = JSON.parse(ev.data)
-        if (msg.type === 'state') onState(msg.state)
+        if (msg.type === 'building') onBuilding(msg.building)
       } catch {
         /* ignore */
       }
