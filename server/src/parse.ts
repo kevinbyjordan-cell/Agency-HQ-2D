@@ -8,6 +8,7 @@ export interface ContentBlock {
   input?: Record<string, unknown>
   tool_use_id?: string
   is_error?: boolean
+  content?: string | ContentBlock[]
 }
 
 export interface TranscriptLine {
