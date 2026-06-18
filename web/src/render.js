@@ -56,11 +56,10 @@ function renderAgent(agent) {
   return el
 }
 
-export function render(state, root) {
-  root.innerHTML = ''
-
+export function renderRoom(state) {
   const room = document.createElement('div')
   room.className = 'room' + (state.status === 'idle' ? ' room--idle' : '')
+  room.dataset.sessionId = state.sessionId ?? ''
 
   const name = document.createElement('div')
   name.className = 'room__name'
@@ -72,5 +71,18 @@ export function render(state, root) {
   for (const agent of state.agents) floor.appendChild(renderAgent(agent))
   room.appendChild(floor)
 
-  root.appendChild(room)
+  return room
+}
+
+export function renderBuilding(building, root) {
+  root.innerHTML = ''
+  const rooms = (building && building.rooms) || []
+  if (rooms.length === 0) {
+    const empty = document.createElement('div')
+    empty.className = 'building__empty'
+    empty.textContent = 'Nenhuma sessão ativa agora.'
+    root.appendChild(empty)
+    return
+  }
+  for (const state of rooms) root.appendChild(renderRoom(state))
 }

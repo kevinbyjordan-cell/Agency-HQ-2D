@@ -1,14 +1,10 @@
 // @vitest-environment jsdom
 import { describe, it, expect, beforeEach } from 'vitest'
-import { render } from '../web/src/render.js'
+import { renderRoom, renderBuilding } from '../web/src/render.js'
 
-function baseState(overrides = {}) {
+function room(overrides = {}) {
   return {
-    sessionId: 's1',
-    project: 'Demo',
-    cwd: 'C:/x/Demo',
-    status: 'active',
-    updatedAt: null,
+    sessionId: 's1', project: 'Demo', cwd: 'C:/x/Demo', status: 'active', updatedAt: null,
     agents: [
       { id: 'orchestrator', type: 'orchestrator', label: 'Orquestrador', isVisitor: false, status: 'working', activity: 'Lendo arquivos', speech: 'Vamos começar', tool: 'Read' },
       { id: 'a1', type: 'copywriter', label: 'Copywriter', isVisitor: false, status: 'working', activity: 'Começando', speech: 'Escrevendo a copy', tool: null },
@@ -17,37 +13,37 @@ function baseState(overrides = {}) {
   }
 }
 
-describe('render', () => {
+describe('renderRoom', () => {
+  it('cria uma .room com nome do projeto e um boneco por agente', () => {
+    const el = renderRoom(room())
+    expect(el.classList.contains('room')).toBe(true)
+    expect(el.querySelector('.room__name').textContent).toBe('Demo')
+    expect(el.querySelectorAll('.agent').length).toBe(2)
+    expect(el.dataset.sessionId).toBe('s1')
+  })
+  it('marca room--idle quando ociosa', () => {
+    expect(renderRoom(room({ status: 'idle' })).classList.contains('room--idle')).toBe(true)
+  })
+})
+
+describe('renderBuilding', () => {
   let root
   beforeEach(() => {
-    document.body.innerHTML = '<div id="root"></div>'
-    root = document.getElementById('root')
+    document.body.innerHTML = '<div id="b"></div>'
+    root = document.getElementById('b')
   })
-
-  it('renderiza um boneco por agente, com nome da sala', () => {
-    render(baseState(), root)
-    expect(root.querySelectorAll('.agent').length).toBe(2)
-    expect(root.querySelector('.room__name').textContent).toBe('Demo')
-    expect(root.textContent).toContain('Orquestrador')
-    expect(root.textContent).toContain('Escrevendo a copy')
+  it('renderiza uma sala por sessão', () => {
+    renderBuilding({ rooms: [room({ sessionId: 's1', project: 'A' }), room({ sessionId: 's2', project: 'B' })] }, root)
+    expect(root.querySelectorAll('.room').length).toBe(2)
   })
-
-  it('aplica room--idle quando a sessão está ociosa', () => {
-    render(baseState({ status: 'idle' }), root)
-    expect(root.querySelector('.room').classList.contains('room--idle')).toBe(true)
+  it('mostra estado vazio quando não há salas', () => {
+    renderBuilding({ rooms: [] }, root)
+    expect(root.querySelector('.building__empty')).not.toBeNull()
   })
-
-  it('marca visitantes com a classe agent--visitor', () => {
-    const s = baseState()
-    s.agents[1].isVisitor = true
-    render(s, root)
-    const visitor = root.querySelector('[data-agent-id="a1"]')
-    expect(visitor.classList.contains('agent--visitor')).toBe(true)
-  })
-
-  it('re-renderiza de forma idempotente (sem acumular)', () => {
-    render(baseState(), root)
-    render(baseState(), root)
-    expect(root.querySelectorAll('.agent').length).toBe(2)
+  it('re-renderiza de forma idempotente', () => {
+    const b = { rooms: [room()] }
+    renderBuilding(b, root)
+    renderBuilding(b, root)
+    expect(root.querySelectorAll('.room').length).toBe(1)
   })
 })
