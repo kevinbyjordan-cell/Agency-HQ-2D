@@ -9,7 +9,8 @@ import { parseLine } from './parse'
 import { reduce, initialState } from './reducer'
 import { isSessionFile, type FileInfo } from './activeSession'
 import { FileTailer } from './tail'
-import { shouldTrack, roomStatus, shouldDrop } from './sessionLifecycle'
+import { shouldTrack, shouldDrop } from './sessionLifecycle'
+import { groupByProject } from './projectRooms'
 import type { OfficeState, BuildingState } from './types'
 
 const PORT = Number(process.env.PORT ?? 4500)
@@ -26,9 +27,8 @@ const sessions = new Map<string, Tracked>()
 const clients = new Set<WebSocket>()
 
 function buildingState(now: number): BuildingState {
-  const rooms = [...sessions.values()]
-    .sort((a, b) => b.lastActivityMs - a.lastActivityMs)
-    .map((t) => ({ ...t.state, status: roomStatus(t.lastActivityMs, now) }))
+  const snaps = [...sessions.values()].map((t) => ({ state: t.state, lastActivityMs: t.lastActivityMs }))
+  const rooms = groupByProject(snaps, now)
   return { rooms, updatedAt: new Date(now).toISOString() }
 }
 
