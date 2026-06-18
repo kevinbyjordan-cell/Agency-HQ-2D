@@ -143,3 +143,40 @@ body {
 .lobby__sign { background: #1e222a; color: #e8eaed; font-size: 13px; padding: 6px 14px; border-radius: 6px; }
 .lobby__reception { width: 130px; height: 18px; background: #7a5c9e; border-radius: 9px; }
 .building__empty { color: #6b6b6b; font-size: 14px; padding: 48px; }
+.mc { display: flex; gap: 0; align-items: stretch; }
+.mc__nav {
+  flex-shrink: 0;
+  width: 150px;
+  background: #1e222a;
+  border-radius: 12px 0 0 12px;
+  padding: 14px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.mc__brand { color: #e8eaed; font-size: 14px; font-weight: 500; padding: 4px 8px 12px; }
+.mc__tab {
+  text-align: left;
+  background: transparent;
+  border: 0;
+  color: #aeb4bd;
+  font-size: 13px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.mc__tab:hover { background: #2a2e37; }
+.mc__tab--active { background: #2f3340; color: #fff; }
+.mc__content { flex: 1; min-width: 0; }
+.mc__view--hidden { display: none; }
+.dashboard { padding: 20px; }
+.dgrid { display: flex; flex-wrap: wrap; gap: 14px; }
+.dcard {
+  background: #23272f;
+  border: 1px solid #3a3f4a;
+  border-radius: 12px;
+  padding: 16px 20px;
+  min-width: 150px;
+}
+.dcard__label { color: #aeb4bd; font-size: 13px; }
+.dcard__value { color: #fff; font-size: 28px; font-weight: 500; margin-top: 4px; }
