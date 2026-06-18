@@ -16,6 +16,7 @@ import { dashboardSummary } from './dashboard'
 import { memoryRoots, memoryResponse } from './memory'
 import { sessionsResponse } from './sessions'
 import { activityResponse } from './activity'
+import { subAgentsResponse } from './subagents'
 
 const PORT = Number(process.env.PORT ?? 4500)
 const PROJECTS_ROOT = path.join(os.homedir(), '.claude', 'projects')
@@ -142,6 +143,13 @@ const server = http.createServer(async (req, res) => {
 
   if (pathname === '/api/activity') {
     const r = await activityResponse(PROJECTS_ROOT, pathname, url.searchParams)
+    res.writeHead(r.status, { 'content-type': 'application/json; charset=utf-8' })
+    res.end(JSON.stringify(r.body))
+    return
+  }
+
+  if (pathname === '/api/subagents') {
+    const r = await subAgentsResponse(PROJECTS_ROOT, pathname, url.searchParams)
     res.writeHead(r.status, { 'content-type': 'application/json; charset=utf-8' })
     res.end(JSON.stringify(r.body))
     return
