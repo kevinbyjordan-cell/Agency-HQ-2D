@@ -815,6 +815,7 @@ import { promises as fs } from 'node:fs'
 export class FileTailer {
   private offset = 0
   private buffer = ''
+  private lastMtimeMs = -1
 
   constructor(private readonly path: string) {}
 
@@ -825,10 +826,21 @@ export class FileTailer {
     } catch {
       return []
     }
-    if (stat.size < this.offset) {
+
+    // Reset on truncation (size shrank) OR overwrite (mtime changed but size did
+    // not grow past offset — catches same-size rewrites). The lastMtimeMs >= 0
+    // guard prevents a false reset on the very first read (initial replay).
+    const truncated = stat.size < this.offset
+    const overwritten =
+      this.lastMtimeMs >= 0 && stat.mtimeMs !== this.lastMtimeMs && stat.size <= this.offset
+
+    if (truncated || overwritten) {
       this.offset = 0
       this.buffer = ''
     }
+
+    this.lastMtimeMs = stat.mtimeMs
+
     if (stat.size === this.offset) return []
 
     const length = stat.size - this.offset
@@ -848,6 +860,10 @@ export class FileTailer {
   }
 }
 ```
+
+> Nota: a versão inicial deste plano não detectava sobrescrita de **mesmo tamanho**
+> (ex.: `x\n` → `y\n`), porque `stat.size === offset` disparava o early-return antes
+> de qualquer reset. A correção acima rastreia `mtime` e reseta também nesse caso.
 
 - [ ] **Step 4: Rodar e ver passar**
 
