@@ -1,7 +1,6 @@
 import { connect } from './ws.js'
-import { renderBuilding } from './render.js'
 import { renderDashboard } from './dashboard.js'
-import { initCamera } from './camera.js'
+import { createOffice3D } from './office3d.js'
 import { renderMemory } from './memory.js'
 import { renderMarkdown } from './markdown.js'
 import { renderSessions } from './sessions.js'
@@ -21,7 +20,7 @@ const NAV = [
 ]
 
 const VIEW_INNER = {
-  office: '<div class="viewport"><div class="camera"><div class="building"></div></div></div>',
+  office: '<div class="office3d"></div>',
   dashboard: '<div class="dashboard"></div>',
   memory: '<div class="memory"></div>',
   sessions: '<div class="sessions"></div>',
@@ -55,16 +54,20 @@ stage.innerHTML =
   '</div>' +
   '</div>'
 
-const buildingEl = stage.querySelector('.building')
+const office3dEl = stage.querySelector('.office3d')
 const dashboardEl = stage.querySelector('.dashboard')
 const memoryEl = stage.querySelector('.memory')
 const sessionsEl = stage.querySelector('.sessions')
 const activityEl = stage.querySelector('.activity')
 const subagentsEl = stage.querySelector('.subagents')
 const costsEl = stage.querySelector('.costs')
-const viewport = stage.querySelector('.viewport')
-const camera = stage.querySelector('.camera')
-initCamera(viewport, camera)
+let office3d = null
+try {
+  office3d = createOffice3D(office3dEl)
+} catch (e) {
+  office3dEl.innerHTML = '<div class="o3d__err">WebGL indisponível neste navegador.</div>'
+  console.error('[office3d]', e)
+}
 
 let latest = { building: { rooms: [] }, dashboard: null }
 let tab = 'office'
@@ -171,7 +174,7 @@ async function loadCosts() {
 }
 
 function renderActive() {
-  if (tab === 'office') renderBuilding(latest.building, buildingEl)
+  if (tab === 'office') { if (office3d) office3d.update(latest.building) }
   else if (tab === 'dashboard') renderDashboard(latest.dashboard, dashboardEl)
   else if (tab === 'memory') renderMemory(memoryState, memoryEl)
   else if (tab === 'sessions') renderSessions(sessionsState, sessionsEl)
