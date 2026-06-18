@@ -65,11 +65,6 @@ body {
 }
 .viewport:active { cursor: grabbing; }
 .camera { transform-origin: 0 0; will-change: transform; }
-.building__empty {
-  color: var(--muted);
-  font-size: 14px;
-  padding: 48px 8px;
-}
 .water {
   display: inline-block;
   background: #8CC4DD;
