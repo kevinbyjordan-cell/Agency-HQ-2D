@@ -1,5 +1,8 @@
+import { promises as fs } from 'node:fs'
 import type { TranscriptLine, ContentBlock } from './parse'
+import { parseLine } from './parse'
 import { toolActivity } from './toolActivity'
+import { listSessionFiles } from './sessions'
 
 export interface Activity {
   ts: string | null
@@ -60,4 +63,53 @@ export function activityStats(activities: Activity[]): ActivityStats {
     else if (a.status === 'error') errors++
   }
   return { total: activities.length, successful, errors }
+}
+
+// ── Filesystem layer ────────────────────────────────────────────────────────
+
+const MAX_SCAN_BYTES = 20_000_000
+const SESSION_LIMIT = 25
+const ACTIVITY_CAP = 300
+
+export async function activityFeed(
+  root: string,
+  sessionLimit = SESSION_LIMIT,
+  cap = ACTIVITY_CAP,
+): Promise<{ activities: Activity[]; stats: ActivityStats }> {
+  const files = (await listSessionFiles(root)).sort((a, b) => b.mtimeMs - a.mtimeMs).slice(0, sessionLimit)
+  const all: Activity[] = []
+  for (const f of files) {
+    let st
+    try {
+      st = await fs.stat(f.path)
+    } catch {
+      continue
+    }
+    if (st.size > MAX_SCAN_BYTES) continue
+    try {
+      const text = await fs.readFile(f.path, 'utf8')
+      const lines: TranscriptLine[] = []
+      for (const raw of text.split('\n')) {
+        const l = parseLine(raw)
+        if (l) lines.push(l)
+      }
+      all.push(...activitiesFromLines(lines))
+    } catch {
+      /* skip */
+    }
+  }
+  all.sort((a, b) => (b.ts ?? '').localeCompare(a.ts ?? ''))
+  const activities = all.slice(0, cap)
+  return { activities, stats: activityStats(activities) }
+}
+
+export async function activityResponse(
+  root: string,
+  pathname: string,
+  _query: URLSearchParams,
+): Promise<{ status: number; body: any }> {
+  if (pathname === '/api/activity') {
+    return { status: 200, body: await activityFeed(root) }
+  }
+  return { status: 404, body: { error: 'not found' } }
 }

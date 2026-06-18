@@ -144,7 +144,7 @@ const MAX_SCAN_BYTES = 20_000_000
 const DEFAULT_LIMIT = 25
 const DEFAULT_BUBBLE_CAP = 250
 
-async function listSessionFiles(root: string): Promise<FileInfo[]> {
+export async function listSessionFiles(root: string): Promise<FileInfo[]> {
   const out: FileInfo[] = []
   async function walk(dir: string): Promise<void> {
     let entries
