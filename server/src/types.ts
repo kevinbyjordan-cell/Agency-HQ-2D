@@ -19,3 +19,8 @@ export interface OfficeState {
   agents: Agent[]
   updatedAt: string | null
 }
+
+export interface BuildingState {
+  rooms: OfficeState[]
+  updatedAt: string | null
+}
