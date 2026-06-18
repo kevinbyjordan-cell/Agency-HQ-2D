@@ -1,5 +1,9 @@
+import { promises as fs } from 'node:fs'
+import path from 'node:path'
 import type { TranscriptLine, ContentBlock } from './parse'
+import { parseLine } from './parse'
 import { messageCostUsd, contextWindow, type UsageTokens } from './pricing'
+import { isSessionFile, type FileInfo } from './activeSession'
 
 export interface SessionMeta {
   id: string
@@ -132,4 +136,122 @@ export function bubblesFromLines(lines: TranscriptLine[], cap: number): Bubble[]
     }
   }
   return cap > 0 && out.length > cap ? out.slice(out.length - cap) : out
+}
+
+// ── Filesystem layer ────────────────────────────────────────────────────────
+
+const MAX_SCAN_BYTES = 20_000_000
+const DEFAULT_LIMIT = 25
+const DEFAULT_BUBBLE_CAP = 250
+
+async function listSessionFiles(root: string): Promise<FileInfo[]> {
+  const out: FileInfo[] = []
+  async function walk(dir: string): Promise<void> {
+    let entries
+    try {
+      entries = await fs.readdir(dir, { withFileTypes: true })
+    } catch {
+      return
+    }
+    for (const e of entries) {
+      const p = path.join(dir, e.name)
+      if (e.isDirectory()) {
+        if (e.name === 'subagents') continue
+        await walk(p)
+      } else if (e.name.endsWith('.jsonl') && isSessionFile(p)) {
+        try {
+          const st = await fs.stat(p)
+          out.push({ path: p, mtimeMs: st.mtimeMs })
+        } catch {
+          /* ignore */
+        }
+      }
+    }
+  }
+  await walk(root)
+  return out
+}
+
+function idFor(root: string, abs: string): string {
+  return path.relative(root, abs).split(path.sep).join('/')
+}
+
+function parseAll(text: string): TranscriptLine[] {
+  const lines: TranscriptLine[] = []
+  for (const raw of text.split('\n')) {
+    const l = parseLine(raw)
+    if (l) lines.push(l)
+  }
+  return lines
+}
+
+export async function sessionsIndex(root: string, limit = DEFAULT_LIMIT): Promise<SessionMeta[]> {
+  const files = (await listSessionFiles(root)).sort((a, b) => b.mtimeMs - a.mtimeMs).slice(0, limit)
+  const metas: SessionMeta[] = []
+  for (const f of files) {
+    const id = idFor(root, f.path)
+    let st
+    try {
+      st = await fs.stat(f.path)
+    } catch {
+      continue
+    }
+    if (st.size > MAX_SCAN_BYTES) {
+      metas.push({
+        id, sessionId: null, project: id.split('/')[0] ?? '', model: null, messages: 0, tokens: 0,
+        costUsd: 0, contextTokens: 0, contextPct: 0, title: '(sessão grande — não lida)',
+        startedAt: null, updatedAt: new Date(f.mtimeMs).toISOString(), partial: true,
+      })
+      continue
+    }
+    try {
+      const meta = sessionMetaFromLines(id, parseAll(await fs.readFile(f.path, 'utf8')))
+      if (!meta.updatedAt) meta.updatedAt = new Date(f.mtimeMs).toISOString()
+      metas.push(meta)
+    } catch {
+      /* skip unreadable */
+    }
+  }
+  return metas
+}
+
+function resolveId(root: string, id: string): string | null {
+  const abs = path.resolve(root, id)
+  const rootPrefix = path.resolve(root) + path.sep
+  if (!abs.startsWith(rootPrefix)) return null
+  if (!isSessionFile(abs)) return null
+  return abs
+}
+
+export async function readTranscript(
+  root: string,
+  id: string,
+  cap = DEFAULT_BUBBLE_CAP,
+): Promise<{ meta: SessionMeta; bubbles: Bubble[] } | null> {
+  const abs = resolveId(root, id)
+  if (!abs) return null
+  let text
+  try {
+    text = await fs.readFile(abs, 'utf8')
+  } catch {
+    return null
+  }
+  const lines = parseAll(text)
+  return { meta: sessionMetaFromLines(id, lines), bubbles: bubblesFromLines(lines, cap) }
+}
+
+export async function sessionsResponse(
+  root: string,
+  pathname: string,
+  query: URLSearchParams,
+): Promise<{ status: number; body: any }> {
+  if (pathname === '/api/sessions') {
+    return { status: 200, body: { sessions: await sessionsIndex(root) } }
+  }
+  if (pathname === '/api/sessions/transcript') {
+    const res = await readTranscript(root, query.get('id') ?? '')
+    if (!res) return { status: 404, body: { error: 'not found' } }
+    return { status: 200, body: res }
+  }
+  return { status: 404, body: { error: 'not found' } }
 }
