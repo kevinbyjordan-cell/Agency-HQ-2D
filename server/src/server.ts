@@ -17,6 +17,7 @@ import { memoryRoots, memoryResponse } from './memory'
 import { sessionsResponse } from './sessions'
 import { activityResponse } from './activity'
 import { subAgentsResponse } from './subagents'
+import { economicsResponse } from './economics'
 
 const PORT = Number(process.env.PORT ?? 4500)
 const PROJECTS_ROOT = path.join(os.homedir(), '.claude', 'projects')
@@ -150,6 +151,13 @@ const server = http.createServer(async (req, res) => {
 
   if (pathname === '/api/subagents') {
     const r = await subAgentsResponse(PROJECTS_ROOT, pathname, url.searchParams)
+    res.writeHead(r.status, { 'content-type': 'application/json; charset=utf-8' })
+    res.end(JSON.stringify(r.body))
+    return
+  }
+
+  if (pathname === '/api/economics') {
+    const r = await economicsResponse(PROJECTS_ROOT, pathname, url.searchParams)
     res.writeHead(r.status, { 'content-type': 'application/json; charset=utf-8' })
     res.end(JSON.stringify(r.body))
     return
