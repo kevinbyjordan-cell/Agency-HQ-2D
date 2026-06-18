@@ -20,8 +20,3 @@ export interface OfficeState {
   updatedAt: string | null
   costUsd: number
 }
-
-export interface BuildingState {
-  rooms: OfficeState[]
-  updatedAt: string | null
-}

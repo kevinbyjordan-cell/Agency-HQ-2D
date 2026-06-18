@@ -9,16 +9,17 @@ Não é um jogo: é um **observador ao vivo** (telemetria viva) com estética de
 
 ## Status
 
-🟢 **Mission Control · M1** — o Office virou um **prédio de agência**: fosso d'água, lobby
-central "Agency HQ" e **uma sala por projeto** (mobiliada, com luz de status e bonecos
-identificados), sobre a base das Fases 1-2 (multi-sessão + câmera pan/zoom). Rode com
+🟢 **Mission Control · M2** — app de **abas**: a aba **Office** é o prédio de agência
+(fosso d'água, lobby "Agency HQ", uma sala por projeto, câmera pan/zoom) e a aba
+**Dashboard** mostra métricas ao vivo — agentes ativos, sessões e **gasto de API em
+tempo real** (somando os tokens dos transcripts × preço por modelo). Rode com
 `npm install && npm run dev`, abra `http://localhost:4500`.
 
 - Roadmap Mission Control: [`docs/superpowers/specs/2026-06-18-mission-control-roadmap.md`](docs/superpowers/specs/2026-06-18-mission-control-roadmap.md)
 - Design do office: [`docs/superpowers/specs/2026-06-18-agency-hq-2d-office-design.md`](docs/superpowers/specs/2026-06-18-agency-hq-2d-office-design.md)
-- Planos: [Fase 1](docs/superpowers/plans/2026-06-18-agency-hq-phase1-uma-sala-ao-vivo.md) · [Fase 2](docs/superpowers/plans/2026-06-18-agency-hq-phase2-predio-multi-sessao.md) · [MC M1](docs/superpowers/plans/2026-06-18-mc-m1-office-por-projeto.md)
+- Planos: [Fase 1](docs/superpowers/plans/2026-06-18-agency-hq-phase1-uma-sala-ao-vivo.md) · [Fase 2](docs/superpowers/plans/2026-06-18-agency-hq-phase2-predio-multi-sessao.md) · [MC M1](docs/superpowers/plans/2026-06-18-mc-m1-office-por-projeto.md) · [MC M2](docs/superpowers/plans/2026-06-18-mc-m2-shell-dashboard.md)
 
-Próximo: MC M2 — Shell + Dashboard (abas + gasto de API ao vivo).
+Próximo: MC M3 — Memory (.md browser) → M4 Org chart → M5 Tasks.
 
 ## Como funciona (resumo)
 
