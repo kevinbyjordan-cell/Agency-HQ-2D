@@ -7,6 +7,7 @@ import { renderMarkdown } from './markdown.js'
 import { renderSessions } from './sessions.js'
 import { icon } from './icons.js'
 import { renderActivity } from './activity.js'
+import { renderSubAgents } from './subagents.js'
 
 const NAV = [
   { tab: 'office', label: 'Office', ico: 'office', emoji: '🏢', title: 'Office', sub: 'Os agentes da operação trabalhando ao vivo' },
@@ -14,6 +15,7 @@ const NAV = [
   { tab: 'memory', label: 'Memory', ico: 'memory', emoji: '🧠', title: 'Memory', sub: 'Memória e conhecimento da operação' },
   { tab: 'sessions', label: 'Sessions', ico: 'sessions', emoji: '💬', title: 'Sessions', sub: 'Histórico de sessões e transcripts' },
   { tab: 'activity', label: 'Activity', ico: 'activity', emoji: '⚡', title: 'Activity', sub: 'Fluxo de ações dos agentes e mapa de calor' },
+  { tab: 'subagents', label: 'Sub-agents', ico: 'users', emoji: '🤖', title: 'Sub-agents', sub: 'Delegações: estado, tokens, duração' },
 ]
 
 const VIEW_INNER = {
@@ -22,6 +24,7 @@ const VIEW_INNER = {
   memory: '<div class="memory"></div>',
   sessions: '<div class="sessions"></div>',
   activity: '<div class="activity"></div>',
+  subagents: '<div class="subagents"></div>',
 }
 
 const navItem = (n, active) =>
@@ -54,6 +57,7 @@ const dashboardEl = stage.querySelector('.dashboard')
 const memoryEl = stage.querySelector('.memory')
 const sessionsEl = stage.querySelector('.sessions')
 const activityEl = stage.querySelector('.activity')
+const subagentsEl = stage.querySelector('.subagents')
 const viewport = stage.querySelector('.viewport')
 const camera = stage.querySelector('.camera')
 initCamera(viewport, camera)
@@ -137,12 +141,26 @@ async function loadActivity() {
   if (tab === 'activity') renderActivity(activityState, activityEl)
 }
 
+let subagentsState = { subagents: [], stats: { total: 0, running: 0, done: 0, failed: 0 } }
+
+async function loadSubAgents() {
+  try {
+    const res = await fetch('/api/subagents')
+    const data = await res.json()
+    subagentsState = { subagents: data.subagents || [], stats: data.stats || { total: 0, running: 0, done: 0, failed: 0 } }
+  } catch {
+    subagentsState = { subagents: [], stats: { total: 0, running: 0, done: 0, failed: 0 } }
+  }
+  if (tab === 'subagents') renderSubAgents(subagentsState, subagentsEl)
+}
+
 function renderActive() {
   if (tab === 'office') renderBuilding(latest.building, buildingEl)
   else if (tab === 'dashboard') renderDashboard(latest.dashboard, dashboardEl)
   else if (tab === 'memory') renderMemory(memoryState, memoryEl)
   else if (tab === 'sessions') renderSessions(sessionsState, sessionsEl)
   else if (tab === 'activity') renderActivity(activityState, activityEl)
+  else if (tab === 'subagents') renderSubAgents(subagentsState, subagentsEl)
 }
 
 for (const btn of stage.querySelectorAll('.nav__item')) {
@@ -153,6 +171,7 @@ for (const btn of stage.querySelectorAll('.nav__item')) {
     if (tab === 'memory') loadMemoryIndex()
     else if (tab === 'sessions') loadSessionsIndex()
     else if (tab === 'activity') loadActivity()
+    else if (tab === 'subagents') loadSubAgents()
     else renderActive()
   })
 }

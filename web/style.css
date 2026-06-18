@@ -329,3 +329,17 @@ body {
 .heat__row { display: flex; align-items: center; gap: 3px; }
 .heat__wd { width: 34px; color: var(--muted); font-size: 10px; flex-shrink: 0; }
 .heat__cell { width: 14px; height: 14px; border-radius: 3px; background: var(--panel-2); }
+
+.sa { margin-top: 18px; }
+.sa__row { display: flex; align-items: flex-start; gap: 12px; padding: 11px 4px; border-bottom: 1px solid var(--border); }
+.sa__dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
+.sa__dot--running { background: var(--blue); }
+.sa__dot--done { background: var(--green); }
+.sa__dot--failed { background: var(--red); }
+.sa__main { flex: 1; min-width: 0; }
+.sa__head { display: flex; gap: 8px; align-items: baseline; }
+.sa__label { color: var(--accent); font-size: 12px; font-weight: 600; flex-shrink: 0; }
+.sa__task { color: var(--text); font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sa__meta { color: var(--faint); font-size: 11px; font-family: ui-monospace, monospace; margin-top: 2px; }
+.sa__time { color: var(--muted); font-size: 11px; flex-shrink: 0; }
+.sa__empty { color: var(--faint); font-size: 13px; padding: 24px 4px; }
