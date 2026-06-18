@@ -13,10 +13,14 @@ import { shouldTrack, shouldDrop } from './sessionLifecycle'
 import { groupByProject } from './projectRooms'
 import type { OfficeState } from './types'
 import { dashboardSummary } from './dashboard'
+import { memoryRoots, memoryResponse } from './memory'
 
 const PORT = Number(process.env.PORT ?? 4500)
 const PROJECTS_ROOT = path.join(os.homedir(), '.claude', 'projects')
 const WEB_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '..', 'web')
+// agency-hq lives at <workspace>/agency-hq; the workspace holds the orchestrator CLAUDE.md
+const WORKSPACE = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '..', '..')
+const MEMORY_ROOTS = memoryRoots(os.homedir(), WORKSPACE)
 
 interface Tracked {
   tailer: FileTailer
@@ -117,7 +121,17 @@ const MIME: Record<string, string> = {
 }
 
 const server = http.createServer(async (req, res) => {
-  let p = decodeURIComponent((req.url ?? '/').split('?')[0])
+  const url = new URL(req.url ?? '/', 'http://localhost')
+  const pathname = decodeURIComponent(url.pathname)
+
+  if (pathname === '/api/memory' || pathname === '/api/memory/content') {
+    const r = await memoryResponse(MEMORY_ROOTS, pathname, url.searchParams)
+    res.writeHead(r.status, { 'content-type': 'application/json; charset=utf-8' })
+    res.end(JSON.stringify(r.body))
+    return
+  }
+
+  let p = pathname
   if (p === '/') p = '/index.html'
   const file = path.join(WEB_DIR, p)
   if (!file.startsWith(WEB_DIR)) {
