@@ -8,6 +8,7 @@ import { renderSessions } from './sessions.js'
 import { icon } from './icons.js'
 import { renderActivity } from './activity.js'
 import { renderSubAgents } from './subagents.js'
+import { renderCosts } from './costs.js'
 
 const NAV = [
   { tab: 'office', label: 'Office', ico: 'office', emoji: '🏢', title: 'Office', sub: 'Os agentes da operação trabalhando ao vivo' },
@@ -16,6 +17,7 @@ const NAV = [
   { tab: 'sessions', label: 'Sessions', ico: 'sessions', emoji: '💬', title: 'Sessions', sub: 'Histórico de sessões e transcripts' },
   { tab: 'activity', label: 'Activity', ico: 'activity', emoji: '⚡', title: 'Activity', sub: 'Fluxo de ações dos agentes e mapa de calor' },
   { tab: 'subagents', label: 'Sub-agents', ico: 'users', emoji: '🤖', title: 'Sub-agents', sub: 'Delegações: estado, tokens, duração' },
+  { tab: 'costs', label: 'Costs', ico: 'dollar', emoji: '💰', title: 'Costs', sub: 'Custo por modelo, cache e projeção' },
 ]
 
 const VIEW_INNER = {
@@ -25,6 +27,7 @@ const VIEW_INNER = {
   sessions: '<div class="sessions"></div>',
   activity: '<div class="activity"></div>',
   subagents: '<div class="subagents"></div>',
+  costs: '<div class="costs"></div>',
 }
 
 const navItem = (n, active) =>
@@ -58,6 +61,7 @@ const memoryEl = stage.querySelector('.memory')
 const sessionsEl = stage.querySelector('.sessions')
 const activityEl = stage.querySelector('.activity')
 const subagentsEl = stage.querySelector('.subagents')
+const costsEl = stage.querySelector('.costs')
 const viewport = stage.querySelector('.viewport')
 const camera = stage.querySelector('.camera')
 initCamera(viewport, camera)
@@ -154,6 +158,18 @@ async function loadSubAgents() {
   if (tab === 'subagents') renderSubAgents(subagentsState, subagentsEl)
 }
 
+let costsState = null
+
+async function loadCosts() {
+  try {
+    const res = await fetch('/api/economics')
+    costsState = await res.json()
+  } catch {
+    costsState = null
+  }
+  if (tab === 'costs') renderCosts(costsState, costsEl)
+}
+
 function renderActive() {
   if (tab === 'office') renderBuilding(latest.building, buildingEl)
   else if (tab === 'dashboard') renderDashboard(latest.dashboard, dashboardEl)
@@ -161,6 +177,7 @@ function renderActive() {
   else if (tab === 'sessions') renderSessions(sessionsState, sessionsEl)
   else if (tab === 'activity') renderActivity(activityState, activityEl)
   else if (tab === 'subagents') renderSubAgents(subagentsState, subagentsEl)
+  else if (tab === 'costs') renderCosts(costsState, costsEl)
 }
 
 for (const btn of stage.querySelectorAll('.nav__item')) {
@@ -172,6 +189,7 @@ for (const btn of stage.querySelectorAll('.nav__item')) {
     else if (tab === 'sessions') loadSessionsIndex()
     else if (tab === 'activity') loadActivity()
     else if (tab === 'subagents') loadSubAgents()
+    else if (tab === 'costs') loadCosts()
     else renderActive()
   })
 }

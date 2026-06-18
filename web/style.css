@@ -343,3 +343,17 @@ body {
 .sa__meta { color: var(--faint); font-size: 11px; font-family: ui-monospace, monospace; margin-top: 2px; }
 .sa__time { color: var(--muted); font-size: 11px; flex-shrink: 0; }
 .sa__empty { color: var(--faint); font-size: 13px; padding: 24px 4px; }
+
+.eco__models, .eco__daily { margin-top: 24px; }
+.eco__head { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 10px; }
+.eco__mrow { display: grid; grid-template-columns: 180px 1fr 80px; align-items: center; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--border); }
+.eco__model { color: var(--text); font-size: 12px; font-family: ui-monospace, monospace; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.eco__track { height: 8px; background: var(--panel-2); border-radius: 4px; overflow: hidden; }
+.eco__fill { height: 100%; background: var(--accent); }
+.eco__mcost { color: var(--text); font-size: 13px; text-align: right; grid-column: 3; grid-row: 1; }
+.eco__msub { grid-column: 1 / -1; color: var(--faint); font-size: 10px; font-family: ui-monospace, monospace; }
+.eco__chart { display: flex; align-items: flex-end; gap: 6px; height: 140px; padding-top: 8px; }
+.eco__col { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; gap: 4px; }
+.eco__bar { width: 60%; min-height: 3px; background: var(--accent); border-radius: 3px 3px 0 0; }
+.eco__day { color: var(--faint); font-size: 9px; }
+.eco__empty { color: var(--faint); font-size: 13px; padding: 24px 4px; }
