@@ -785,12 +785,22 @@ describe('FileTailer', () => {
     expect(await t.readNewLines()).toEqual(['partial'])
   })
 
-  it('reseta quando o arquivo é truncado/reescrito', async () => {
+  it('reseta quando o arquivo encolhe (truncamento)', async () => {
+    const p = await tmpFile()
+    const t = new FileTailer(p)
+    await fs.appendFile(p, 'xxxx\n')
+    expect(await t.readNewLines()).toEqual(['xxxx'])
+    await fs.writeFile(p, 'y\n')
+    expect(await t.readNewLines()).toEqual(['y'])
+  })
+
+  it('reseta em reescrita de mesmo tamanho quando o mtime muda', async () => {
     const p = await tmpFile()
     const t = new FileTailer(p)
     await fs.appendFile(p, 'x\n')
     expect(await t.readNewLines()).toEqual(['x'])
     await fs.writeFile(p, 'y\n')
+    await fs.utimes(p, new Date(), new Date(Date.now() + 5000))
     expect(await t.readNewLines()).toEqual(['y'])
   })
 
