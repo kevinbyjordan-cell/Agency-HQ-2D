@@ -33,56 +33,89 @@ function renderAgent(agent) {
   el.className = `agent agent--${agent.status}` + (agent.isVisitor ? ' agent--visitor' : '')
   el.dataset.agentId = agent.id
   el.dataset.type = agent.type
-
   if (agent.speech) {
     const bubble = document.createElement('div')
     bubble.className = 'bubble'
     bubble.textContent = agent.speech
     el.appendChild(bubble)
   }
-
   el.appendChild(makeBody(agent))
-
   const label = document.createElement('div')
   label.className = 'agent__label'
   label.textContent = agent.label
   el.appendChild(label)
-
   const act = document.createElement('div')
   act.className = 'agent__activity'
   act.textContent = agent.activity || (agent.status === 'idle' ? 'ocioso' : '')
   el.appendChild(act)
-
   return el
 }
 
-export function renderRoom(state) {
-  const room = document.createElement('div')
-  room.className = 'room' + (state.status === 'idle' ? ' room--idle' : '')
-  room.dataset.sessionId = state.sessionId ?? ''
+export function renderDept(state) {
+  const dept = document.createElement('div')
+  dept.className = 'dept' + (state.status === 'idle' ? ' dept--idle' : '')
+  dept.dataset.sessionId = state.sessionId ?? ''
+  dept.dataset.project = state.project ?? ''
 
-  const name = document.createElement('div')
-  name.className = 'room__name'
-  name.textContent = state.project || 'Sessão'
-  room.appendChild(name)
+  const plate = document.createElement('div')
+  plate.className = 'dept__plate'
+  const light = document.createElement('span')
+  light.className = 'dept__light dept__light--' + (state.status === 'idle' ? 'idle' : 'active')
+  const title = document.createElement('span')
+  title.className = 'dept__title'
+  title.textContent = state.project || 'Sessão'
+  plate.append(light, title)
+  dept.appendChild(plate)
 
   const floor = document.createElement('div')
-  floor.className = 'floor'
+  floor.className = 'dept__floor'
+  const plant = document.createElement('div')
+  plant.className = 'plant'
+  floor.appendChild(plant)
   for (const agent of state.agents) floor.appendChild(renderAgent(agent))
-  room.appendChild(floor)
+  const desk = document.createElement('div')
+  desk.className = 'dept__desk'
+  floor.appendChild(desk)
+  dept.appendChild(floor)
 
-  return room
+  return dept
+}
+
+export function renderLobby() {
+  const lobby = document.createElement('div')
+  lobby.className = 'lobby'
+  const sign = document.createElement('div')
+  sign.className = 'lobby__sign'
+  sign.textContent = 'Agency HQ'
+  const reception = document.createElement('div')
+  reception.className = 'lobby__reception'
+  const p1 = document.createElement('div')
+  p1.className = 'plant'
+  const p2 = document.createElement('div')
+  p2.className = 'plant'
+  lobby.append(sign, reception, p1, p2)
+  return lobby
 }
 
 export function renderBuilding(building, root) {
   root.innerHTML = ''
+  const water = document.createElement('div')
+  water.className = 'water'
+  const floor = document.createElement('div')
+  floor.className = 'hq-floor'
+
   const rooms = (building && building.rooms) || []
   if (rooms.length === 0) {
     const empty = document.createElement('div')
     empty.className = 'building__empty'
     empty.textContent = 'Nenhuma sessão ativa agora.'
-    root.appendChild(empty)
-    return
+    floor.appendChild(empty)
+  } else {
+    const els = rooms.map(renderDept)
+    els.splice(Math.floor(els.length / 2), 0, renderLobby())
+    for (const el of els) floor.appendChild(el)
   }
-  for (const state of rooms) root.appendChild(renderRoom(state))
+
+  water.appendChild(floor)
+  root.appendChild(water)
 }
