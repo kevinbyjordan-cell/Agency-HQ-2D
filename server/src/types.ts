@@ -18,6 +18,7 @@ export interface OfficeState {
   status: 'active' | 'idle'
   agents: Agent[]
   updatedAt: string | null
+  costUsd: number
 }
 
 export interface BuildingState {

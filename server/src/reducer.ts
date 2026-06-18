@@ -1,6 +1,7 @@
 import type { Agent, OfficeState } from './types'
 import type { TranscriptLine, ContentBlock } from './parse'
 import { KNOWN_AGENTS, ORCHESTRATOR_ID } from './constants'
+import { messageCostUsd } from './pricing'
 import { labelForAgentType } from './labels'
 import { toolActivity } from './toolActivity'
 
@@ -25,6 +26,7 @@ export function initialState(): OfficeState {
     status: 'idle',
     agents: [makeOrchestrator()],
     updatedAt: null,
+    costUsd: 0,
   }
 }
 
@@ -55,6 +57,9 @@ export function reduce(state: OfficeState, line: TranscriptLine): OfficeState {
   if (line.type === 'assistant') {
     next.status = 'active'
     orch.status = 'working'
+    if (line.message?.usage && line.message?.model) {
+      next.costUsd += messageCostUsd(line.message.model, line.message.usage)
+    }
     for (const b of content) {
       if (b.type === 'text' && b.text && b.text.trim()) {
         orch.speech = firstLine(b.text)

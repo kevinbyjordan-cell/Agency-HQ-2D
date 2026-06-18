@@ -124,4 +124,19 @@ describe('reduce', () => {
     expect(prev.agents[0].speech).toBe('')
     expect(after).not.toBe(prev)
   })
+
+  it('acumula custo de API a partir de usage + model', () => {
+    const line: TranscriptLine = {
+      type: 'assistant',
+      timestamp: ts,
+      message: {
+        role: 'assistant',
+        model: 'claude-opus-4-8',
+        usage: { input_tokens: 1_000_000, output_tokens: 1_000_000 },
+        content: [{ type: 'text', text: 'oi' }],
+      },
+    }
+    const s = reduce(initialState(), line)
+    expect(s.costUsd).toBeCloseTo(30, 5)
+  })
 })

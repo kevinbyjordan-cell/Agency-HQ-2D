@@ -1,3 +1,5 @@
+import type { UsageTokens } from './pricing'
+
 export interface ContentBlock {
   type: string
   text?: string
@@ -16,6 +18,8 @@ export interface TranscriptLine {
   isSidechain?: boolean
   message?: {
     role?: string
+    model?: string
+    usage?: UsageTokens
     content?: ContentBlock[] | string
   }
 }

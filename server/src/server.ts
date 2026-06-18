@@ -11,7 +11,8 @@ import { isSessionFile, type FileInfo } from './activeSession'
 import { FileTailer } from './tail'
 import { shouldTrack, shouldDrop } from './sessionLifecycle'
 import { groupByProject } from './projectRooms'
-import type { OfficeState, BuildingState } from './types'
+import type { OfficeState } from './types'
+import { dashboardSummary } from './dashboard'
 
 const PORT = Number(process.env.PORT ?? 4500)
 const PROJECTS_ROOT = path.join(os.homedir(), '.claude', 'projects')
@@ -26,14 +27,19 @@ interface Tracked {
 const sessions = new Map<string, Tracked>()
 const clients = new Set<WebSocket>()
 
-function buildingState(now: number): BuildingState {
+function snapshot(now: number): string {
   const snaps = [...sessions.values()].map((t) => ({ state: t.state, lastActivityMs: t.lastActivityMs }))
   const rooms = groupByProject(snaps, now)
-  return { rooms, updatedAt: new Date(now).toISOString() }
+  const iso = new Date(now).toISOString()
+  return JSON.stringify({
+    type: 'building',
+    building: { rooms, updatedAt: iso },
+    dashboard: dashboardSummary(rooms, iso),
+  })
 }
 
 function broadcast(now: number): void {
-  const msg = JSON.stringify({ type: 'building', building: buildingState(now) })
+  const msg = snapshot(now)
   for (const ws of clients) if (ws.readyState === ws.OPEN) ws.send(msg)
 }
 
@@ -132,7 +138,7 @@ const server = http.createServer(async (req, res) => {
 const wss = new WebSocketServer({ server })
 wss.on('connection', (ws) => {
   clients.add(ws)
-  ws.send(JSON.stringify({ type: 'building', building: buildingState(Date.now()) }))
+  ws.send(snapshot(Date.now()))
   ws.on('close', () => clients.delete(ws))
 })
 
