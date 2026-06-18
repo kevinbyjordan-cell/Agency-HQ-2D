@@ -9,19 +9,19 @@ Não é um jogo: é um **observador ao vivo** (telemetria viva) com estética de
 
 ## Status
 
-🟢 **Mission Control · M4** — app de **abas**: **Office** (prédio de agência com
-fosso d'água, lobby "Agency HQ", uma sala por projeto, câmera pan/zoom), **Dashboard**
-(métricas ao vivo — agentes ativos, sessões e **gasto de API em tempo real**), **Memory**
-(navegador read-only dos `.md` da operação, renderizados como markdown) e **Sessions** —
-lista todas as sessões do Claude Code (modelo, tokens, **% de contexto**, custo, título)
-e abre o **transcript real** de qualquer uma em balões (você / agente / tool). Rode com
-`npm install && npm run dev`, abra `http://localhost:4500`.
+🟢 **Mission Control · M5** — shell estilo "OS" (top bar + sidebar de ícones + headers +
+stat cards) com 5 abas: **Office** (prédio de agência ao vivo), **Dashboard** (métricas —
+agentes ativos, sessões, **gasto de API em tempo real**), **Memory** (navegador read-only
+dos `.md` da operação), **Sessions** (todas as sessões do Claude Code — modelo, tokens,
+**% de contexto**, custo — com viewer de **transcript** em balões) e **Activity** — feed
+cronológico das ações dos agentes (ok/erro), cards Total/Hoje/Sucesso/Erros e um **mapa de
+calor** por dia×hora. Rode com `npm install && npm run dev`, abra `http://localhost:4500`.
 
 - Roadmap Mission Control: [`docs/superpowers/specs/2026-06-18-mission-control-roadmap.md`](docs/superpowers/specs/2026-06-18-mission-control-roadmap.md)
 - Design do office: [`docs/superpowers/specs/2026-06-18-agency-hq-2d-office-design.md`](docs/superpowers/specs/2026-06-18-agency-hq-2d-office-design.md)
-- Planos: [Fase 1](docs/superpowers/plans/2026-06-18-agency-hq-phase1-uma-sala-ao-vivo.md) · [Fase 2](docs/superpowers/plans/2026-06-18-agency-hq-phase2-predio-multi-sessao.md) · [MC M1](docs/superpowers/plans/2026-06-18-mc-m1-office-por-projeto.md) · [MC M2](docs/superpowers/plans/2026-06-18-mc-m2-shell-dashboard.md) · [MC M3](docs/superpowers/plans/2026-06-18-mc-m3-memory-browser.md) · [MC M4](docs/superpowers/plans/2026-06-18-mc-m4-sessions-transcript.md)
+- Planos: [Fase 1](docs/superpowers/plans/2026-06-18-agency-hq-phase1-uma-sala-ao-vivo.md) · [Fase 2](docs/superpowers/plans/2026-06-18-agency-hq-phase2-predio-multi-sessao.md) · [MC M1](docs/superpowers/plans/2026-06-18-mc-m1-office-por-projeto.md) · [MC M2](docs/superpowers/plans/2026-06-18-mc-m2-shell-dashboard.md) · [MC M3](docs/superpowers/plans/2026-06-18-mc-m3-memory-browser.md) · [MC M4](docs/superpowers/plans/2026-06-18-mc-m4-sessions-transcript.md) · [MC M5](docs/superpowers/plans/2026-06-18-mc-m5-activity-feed.md)
 
-Próximo (roadmap v2): MC M5 — Activity Feed + heatmap → M6 Sub-Agent Dashboard → M7 Token Economics → M8 Org chart → M9 Tasks.
+Próximo (roadmap v2): MC M6 — Sub-Agent Dashboard → M7 Token Economics → M8 Org chart → M9 Tasks.
 
 ## Como funciona (resumo)
 
