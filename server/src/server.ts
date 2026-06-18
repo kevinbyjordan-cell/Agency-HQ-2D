@@ -7,23 +7,33 @@ import { WebSocketServer, WebSocket } from 'ws'
 import chokidar from 'chokidar'
 import { parseLine } from './parse'
 import { reduce, initialState } from './reducer'
-import { pickActiveSession, isSessionFile, type FileInfo } from './activeSession'
+import { isSessionFile, type FileInfo } from './activeSession'
 import { FileTailer } from './tail'
-import type { OfficeState } from './types'
+import { shouldTrack, roomStatus, shouldDrop } from './sessionLifecycle'
+import type { OfficeState, BuildingState } from './types'
 
 const PORT = Number(process.env.PORT ?? 4500)
 const PROJECTS_ROOT = path.join(os.homedir(), '.claude', 'projects')
 const WEB_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '..', 'web')
-const IDLE_MS = 90_000
 
-let state: OfficeState = initialState()
-let activeFile: string | null = null
-let tailer: FileTailer | null = null
-let lastActivityMs = 0
+interface Tracked {
+  tailer: FileTailer
+  state: OfficeState
+  lastActivityMs: number
+}
+
+const sessions = new Map<string, Tracked>()
 const clients = new Set<WebSocket>()
 
-function broadcast(): void {
-  const msg = JSON.stringify({ type: 'state', state })
+function buildingState(now: number): BuildingState {
+  const rooms = [...sessions.values()]
+    .sort((a, b) => b.lastActivityMs - a.lastActivityMs)
+    .map((t) => ({ ...t.state, status: roomStatus(t.lastActivityMs, now) }))
+  return { rooms, updatedAt: new Date(now).toISOString() }
+}
+
+function broadcast(now: number): void {
+  const msg = JSON.stringify({ type: 'building', building: buildingState(now) })
   for (const ws of clients) if (ws.readyState === ws.OPEN) ws.send(msg)
 }
 
@@ -53,56 +63,44 @@ async function listSessionFiles(): Promise<FileInfo[]> {
   return out
 }
 
-async function applyLines(lines: string[]): Promise<void> {
+async function ingest(t: Tracked): Promise<boolean> {
+  const lines = await t.tailer.readNewLines()
+  if (lines.length === 0) return false
   for (const raw of lines) {
     const line = parseLine(raw)
-    if (line) state = reduce(state, line)
+    if (line) t.state = reduce(t.state, line)
   }
+  return true
 }
 
-async function switchTo(file: string): Promise<void> {
-  activeFile = file
-  state = initialState()
-  tailer = new FileTailer(file)
-  await applyLines(await tailer.readNewLines())
-  state.status = 'active'
-  lastActivityMs = Date.now()
-  console.log(`[hq] sessão ativa: ${file}`)
-  broadcast()
-}
-
-async function onChange(): Promise<void> {
-  const newest = pickActiveSession(await listSessionFiles())
-  if (!newest) return
-  if (newest !== activeFile) {
-    await switchTo(newest)
-    return
+async function reconcile(now: number): Promise<void> {
+  const files = await listSessionFiles()
+  for (const f of files) {
+    if (!shouldTrack(f.mtimeMs, now)) continue
+    let t = sessions.get(f.path)
+    if (!t) {
+      t = { tailer: new FileTailer(f.path), state: initialState(), lastActivityMs: f.mtimeMs }
+      sessions.set(f.path, t)
+      await ingest(t)
+    } else if (await ingest(t)) {
+      t.lastActivityMs = now
+    }
   }
-  if (!tailer) return
-  const lines = await tailer.readNewLines()
-  if (lines.length === 0) return
-  await applyLines(lines)
-  state.status = 'active'
-  lastActivityMs = Date.now()
-  broadcast()
+  for (const [p, t] of sessions) {
+    if (shouldDrop(t.lastActivityMs, now)) sessions.delete(p)
+  }
+  broadcast(now)
 }
 
 let pending = false
-function scheduleChange(): void {
+function scheduleReconcile(): void {
   if (pending) return
   pending = true
   setTimeout(() => {
     pending = false
-    onChange().catch((e) => console.error('[hq] onChange', e))
+    reconcile(Date.now()).catch((e) => console.error('[hq] reconcile', e))
   }, 150)
 }
-
-setInterval(() => {
-  if (state.status === 'active' && Date.now() - lastActivityMs > IDLE_MS) {
-    state = { ...state, status: 'idle' }
-    broadcast()
-  }
-}, 2000)
 
 const MIME: Record<string, string> = {
   '.html': 'text/html; charset=utf-8',
@@ -134,15 +132,15 @@ const server = http.createServer(async (req, res) => {
 const wss = new WebSocketServer({ server })
 wss.on('connection', (ws) => {
   clients.add(ws)
-  ws.send(JSON.stringify({ type: 'state', state }))
+  ws.send(JSON.stringify({ type: 'building', building: buildingState(Date.now()) }))
   ws.on('close', () => clients.delete(ws))
 })
 
 async function main(): Promise<void> {
-  const active = pickActiveSession(await listSessionFiles())
-  if (active) await switchTo(active)
+  await reconcile(Date.now())
   const watcher = chokidar.watch(PROJECTS_ROOT, { ignoreInitial: true, depth: 5 })
-  watcher.on('all', scheduleChange)
+  watcher.on('all', scheduleReconcile)
+  setInterval(() => reconcile(Date.now()).catch((e) => console.error('[hq] tick', e)), 3000)
   server.listen(PORT, () => console.log(`[hq] Agency HQ em http://localhost:${PORT}`))
 }
 
