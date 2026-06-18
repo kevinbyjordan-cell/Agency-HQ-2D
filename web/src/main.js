@@ -80,5 +80,7 @@ for (const btn of stage.querySelectorAll('.mc__tab')) {
 
 connect((msg) => {
   latest = msg
-  renderActive()
+  // Only the WS-driven views need a live redraw; re-rendering Memory here would
+  // rebuild its DOM (and reset scroll) every tick for data it doesn't consume.
+  if (tab === 'office' || tab === 'dashboard') renderActive()
 })
