@@ -29,7 +29,7 @@ function sessionCard(s, selected) {
 
   const meta = el('div', 'sess__meta')
   meta.append(
-    el('span', null, pct(s.contextPct) + '% contexto'),
+    el('span', null, Math.min(100, pct(s.contextPct)) + '% contexto'),
     el('span', null, (s.messages || 0) + ' msgs'),
     el('span', null, '$' + Number(s.costUsd || 0).toFixed(2)),
   )
