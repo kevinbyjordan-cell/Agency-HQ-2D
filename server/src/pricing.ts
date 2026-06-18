@@ -47,3 +47,17 @@ export function messageCostUsd(model: string, usage: UsageTokens): number {
   const total = input * p.input + output * p.output + cacheRead * p.input * CACHE_READ_MULT + cacheWriteCost
   return total / 1_000_000
 }
+
+// Context windows (tokens) per model — used for the "% context used" bar.
+export const CONTEXT_WINDOW: Record<string, number> = {
+  'claude-fable-5': 1_000_000,
+  'claude-opus-4-8': 1_000_000,
+  'claude-opus-4-7': 1_000_000,
+  'claude-opus-4-6': 1_000_000,
+  'claude-sonnet-4-6': 1_000_000,
+  'claude-haiku-4-5': 200_000,
+}
+
+export function contextWindow(model: string): number {
+  return CONTEXT_WINDOW[model] ?? 200_000
+}
