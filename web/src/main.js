@@ -6,12 +6,14 @@ import { renderMemory } from './memory.js'
 import { renderMarkdown } from './markdown.js'
 import { renderSessions } from './sessions.js'
 import { icon } from './icons.js'
+import { renderActivity } from './activity.js'
 
 const NAV = [
   { tab: 'office', label: 'Office', ico: 'office', emoji: '🏢', title: 'Office', sub: 'Os agentes da operação trabalhando ao vivo' },
   { tab: 'dashboard', label: 'Dashboard', ico: 'dashboard', emoji: '📊', title: 'Dashboard', sub: 'Visão geral da operação de IA' },
   { tab: 'memory', label: 'Memory', ico: 'memory', emoji: '🧠', title: 'Memory', sub: 'Memória e conhecimento da operação' },
   { tab: 'sessions', label: 'Sessions', ico: 'sessions', emoji: '💬', title: 'Sessions', sub: 'Histórico de sessões e transcripts' },
+  { tab: 'activity', label: 'Activity', ico: 'activity', emoji: '⚡', title: 'Activity', sub: 'Fluxo de ações dos agentes e mapa de calor' },
 ]
 
 const VIEW_INNER = {
@@ -19,6 +21,7 @@ const VIEW_INNER = {
   dashboard: '<div class="dashboard"></div>',
   memory: '<div class="memory"></div>',
   sessions: '<div class="sessions"></div>',
+  activity: '<div class="activity"></div>',
 }
 
 const navItem = (n, active) =>
@@ -50,6 +53,7 @@ const buildingEl = stage.querySelector('.building')
 const dashboardEl = stage.querySelector('.dashboard')
 const memoryEl = stage.querySelector('.memory')
 const sessionsEl = stage.querySelector('.sessions')
+const activityEl = stage.querySelector('.activity')
 const viewport = stage.querySelector('.viewport')
 const camera = stage.querySelector('.camera')
 initCamera(viewport, camera)
@@ -120,11 +124,25 @@ sessionsEl.addEventListener('click', (ev) => {
   if (item) openSession(item.getAttribute('data-sess-id'))
 })
 
+let activityState = { activities: [], stats: { total: 0, successful: 0, errors: 0 } }
+
+async function loadActivity() {
+  try {
+    const res = await fetch('/api/activity')
+    const data = await res.json()
+    activityState = { activities: data.activities || [], stats: data.stats || { total: 0, successful: 0, errors: 0 } }
+  } catch {
+    activityState = { activities: [], stats: { total: 0, successful: 0, errors: 0 } }
+  }
+  if (tab === 'activity') renderActivity(activityState, activityEl)
+}
+
 function renderActive() {
   if (tab === 'office') renderBuilding(latest.building, buildingEl)
   else if (tab === 'dashboard') renderDashboard(latest.dashboard, dashboardEl)
   else if (tab === 'memory') renderMemory(memoryState, memoryEl)
   else if (tab === 'sessions') renderSessions(sessionsState, sessionsEl)
+  else if (tab === 'activity') renderActivity(activityState, activityEl)
 }
 
 for (const btn of stage.querySelectorAll('.nav__item')) {
@@ -134,6 +152,7 @@ for (const btn of stage.querySelectorAll('.nav__item')) {
     for (const v of stage.querySelectorAll('.mc__view')) v.classList.toggle('mc__view--hidden', v.dataset.view !== tab)
     if (tab === 'memory') loadMemoryIndex()
     else if (tab === 'sessions') loadSessionsIndex()
+    else if (tab === 'activity') loadActivity()
     else renderActive()
   })
 }
