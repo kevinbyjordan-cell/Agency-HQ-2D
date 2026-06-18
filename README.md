@@ -10,7 +10,8 @@ Não é um jogo: é um **observador ao vivo** (telemetria viva) com estética de
 ## Status
 
 🟢 **Mission Control · M7** — shell estilo "OS" (top bar + sidebar de ícones + headers +
-stat cards) com 7 abas: **Office** (prédio ao vivo), **Dashboard** (métricas + gasto ao
+stat cards) com 7 abas: **Office** (escritório **3D** ao vivo em Three.js — avatares por
+agente, câmera orbital), **Dashboard** (métricas + gasto ao
 vivo), **Memory** (navegador `.md`), **Sessions** (transcript em balões), **Activity**
 (feed + **mapa de calor**), **Sub-agents** (delegações: tipo/task/modelo/tokens/duração/
 estado) e **Costs** — economia de tokens: **custo por modelo**, split input/output/**cache**,
