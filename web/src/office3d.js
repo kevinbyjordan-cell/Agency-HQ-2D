@@ -1,7 +1,7 @@
 import * as THREE from 'three'
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
 import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js'
-import { flattenAgents, gridPosition } from './office3dLayout.js'
+import { layoutRooms } from './office3dLayout.js'
 
 const TYPE_COLOR = {
   orchestrator: 0xe2603f,
@@ -23,7 +23,7 @@ export function createOffice3D(container) {
   scene.fog = new THREE.Fog(0x0b0d11, 28, 60)
 
   const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 200)
-  camera.position.set(0, 10, 15)
+  camera.position.set(0, 15, 22)
 
   const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true })
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2))
@@ -55,6 +55,17 @@ export function createOffice3D(container) {
   scene.add(new THREE.GridHelper(80, 40, 0x2a2f3a, 0x20242d))
 
   const avatars = new Map()
+  const roomGroup = new THREE.Group()
+  scene.add(roomGroup)
+
+  function clearGroup(g) {
+    for (const child of [...g.children]) {
+      if (child.isCSS2DObject && child.element && child.element.parentNode) child.element.parentNode.removeChild(child.element)
+      if (child.geometry) child.geometry.dispose()
+      if (child.material) child.material.dispose()
+    }
+    g.clear()
+  }
 
   function makeAvatar(a) {
     const group = new THREE.Group()
@@ -97,9 +108,32 @@ export function createOffice3D(container) {
   }
 
   function update(building) {
-    const flat = flattenAgents(building)
+    const rooms = layoutRooms(building)
+
+    // Rebuild room zones + project signs each tick (rooms change rarely; cheap).
+    clearGroup(roomGroup)
+    for (const room of rooms) {
+      const active = room.status === 'active'
+      const pad = new THREE.Mesh(
+        new THREE.PlaneGeometry(room.w, room.d),
+        new THREE.MeshStandardMaterial({ color: active ? 0x242a36 : 0x1b1f27, roughness: 1, transparent: true, opacity: 0.92 }),
+      )
+      pad.rotation.x = -Math.PI / 2
+      pad.position.set(room.cx, 0.02, room.cz)
+      roomGroup.add(pad)
+
+      const signDiv = document.createElement('div')
+      signDiv.className = 'o3d__sign' + (active ? ' o3d__sign--active' : '')
+      signDiv.textContent = room.project || '—'
+      const sign = new CSS2DObject(signDiv)
+      sign.position.set(room.cx, 3.4, room.cz - room.d / 2 - 0.6)
+      roomGroup.add(sign)
+    }
+
+    // Position one avatar per agent at its room-relative spot; diff by stable id.
+    const flat = rooms.flatMap((r) => r.agents)
     const seen = new Set()
-    flat.forEach((a, i) => {
+    for (const a of flat) {
       seen.add(a.id)
       let av = avatars.get(a.id)
       if (!av) {
@@ -107,10 +141,9 @@ export function createOffice3D(container) {
         scene.add(av.group)
         avatars.set(a.id, av)
       }
-      const { x, z } = gridPosition(i, flat.length, 3.4)
-      av.group.position.x = x
-      av.group.position.z = z
-      av.phase = x * 0.7 + z * 0.3
+      av.group.position.x = a.x
+      av.group.position.z = a.z
+      av.phase = a.x * 0.7 + a.z * 0.3
       av.bodyMat.color.set(colorFor(a.type))
       av.labelDiv.textContent = a.label
       av.working = a.status === 'working'
@@ -123,7 +156,7 @@ export function createOffice3D(container) {
       } else {
         av.bubbleDiv.style.display = 'none'
       }
-    })
+    }
     for (const [id, av] of avatars) {
       if (!seen.has(id)) {
         scene.remove(av.group)
@@ -185,6 +218,7 @@ export function createOffice3D(container) {
       disposeAvatar(av)
     }
     avatars.clear()
+    clearGroup(roomGroup)
     controls.dispose()
     renderer.dispose()
     if (renderer.domElement.parentNode) renderer.domElement.parentNode.removeChild(renderer.domElement)
