@@ -5,23 +5,45 @@ import { initCamera } from './camera.js'
 import { renderMemory } from './memory.js'
 import { renderMarkdown } from './markdown.js'
 import { renderSessions } from './sessions.js'
+import { icon } from './icons.js'
+
+const NAV = [
+  { tab: 'office', label: 'Office', ico: 'office', emoji: '🏢', title: 'Office', sub: 'Os agentes da operação trabalhando ao vivo' },
+  { tab: 'dashboard', label: 'Dashboard', ico: 'dashboard', emoji: '📊', title: 'Dashboard', sub: 'Visão geral da operação de IA' },
+  { tab: 'memory', label: 'Memory', ico: 'memory', emoji: '🧠', title: 'Memory', sub: 'Memória e conhecimento da operação' },
+  { tab: 'sessions', label: 'Sessions', ico: 'sessions', emoji: '💬', title: 'Sessions', sub: 'Histórico de sessões e transcripts' },
+]
+
+const VIEW_INNER = {
+  office: '<div class="viewport"><div class="camera"><div class="building"></div></div></div>',
+  dashboard: '<div class="dashboard"></div>',
+  memory: '<div class="memory"></div>',
+  sessions: '<div class="sessions"></div>',
+}
+
+const navItem = (n, active) =>
+  '<button class="nav__item' + (active ? ' nav__item--active' : '') + '" data-tab="' + n.tab + '">' +
+  '<span class="nav__icon">' + icon(n.ico) + '</span><span class="nav__label">' + n.label + '</span></button>'
+
+const viewSection = (n, active) =>
+  '<section class="mc__view page page--' + n.tab + (active ? '' : ' mc__view--hidden') + '" data-view="' + n.tab + '">' +
+  '<div class="page__head"><h1 class="page__title">' + n.emoji + ' ' + n.title + '</h1>' +
+  '<p class="page__sub">' + n.sub + '</p></div>' +
+  '<div class="page__body">' + VIEW_INNER[n.tab] + '</div></section>'
 
 const stage = document.getElementById('stage')
 stage.innerHTML =
-  '<div class="mc">' +
-  '<aside class="mc__nav">' +
-  '<div class="mc__brand">Agency HQ</div>' +
-  '<button class="mc__tab mc__tab--active" data-tab="office">Office</button>' +
-  '<button class="mc__tab" data-tab="dashboard">Dashboard</button>' +
-  '<button class="mc__tab" data-tab="memory">Memory</button>' +
-  '<button class="mc__tab" data-tab="sessions">Sessions</button>' +
-  '</aside>' +
-  '<main class="mc__content">' +
-  '<section class="mc__view" data-view="office"><div class="viewport"><div class="camera"><div class="building"></div></div></div></section>' +
-  '<section class="mc__view mc__view--hidden" data-view="dashboard"><div class="dashboard"></div></section>' +
-  '<section class="mc__view mc__view--hidden" data-view="memory"><div class="memory"></div></section>' +
-  '<section class="mc__view mc__view--hidden" data-view="sessions"><div class="sessions"></div></section>' +
-  '</main>' +
+  '<div class="app">' +
+  '<header class="topbar">' +
+  '<div class="topbar__brand"><span class="topbar__logo">🏢</span><span>Agency HQ</span><span class="topbar__ver">v0.1</span></div>' +
+  '<div class="topbar__search">' + icon('search', 'topbar__searchico') + '<input placeholder="Buscar…" aria-label="Buscar" /></div>' +
+  '<div class="topbar__right"><button class="topbar__btn" title="Notificações" aria-label="Notificações">' + icon('bell') + '</button>' +
+  '<span class="topbar__avatar">K</span></div>' +
+  '</header>' +
+  '<div class="app__body">' +
+  '<nav class="sidebar">' + NAV.map((n, i) => navItem(n, i === 0)).join('') + '</nav>' +
+  '<main class="content">' + NAV.map((n, i) => viewSection(n, i === 0)).join('') + '</main>' +
+  '</div>' +
   '</div>'
 
 const buildingEl = stage.querySelector('.building')
@@ -105,10 +127,10 @@ function renderActive() {
   else if (tab === 'sessions') renderSessions(sessionsState, sessionsEl)
 }
 
-for (const btn of stage.querySelectorAll('.mc__tab')) {
+for (const btn of stage.querySelectorAll('.nav__item')) {
   btn.addEventListener('click', () => {
     tab = btn.dataset.tab
-    for (const b of stage.querySelectorAll('.mc__tab')) b.classList.toggle('mc__tab--active', b === btn)
+    for (const b of stage.querySelectorAll('.nav__item')) b.classList.toggle('nav__item--active', b === btn)
     for (const v of stage.querySelectorAll('.mc__view')) v.classList.toggle('mc__view--hidden', v.dataset.view !== tab)
     if (tab === 'memory') loadMemoryIndex()
     else if (tab === 'sessions') loadSessionsIndex()
@@ -118,7 +140,7 @@ for (const btn of stage.querySelectorAll('.mc__tab')) {
 
 connect((msg) => {
   latest = msg
-  // Only the WS-driven views need a live redraw; re-rendering Memory here would
-  // rebuild its DOM (and reset scroll) every tick for data it doesn't consume.
+  // Only the WS-driven views need a live redraw; re-rendering data views here would
+  // rebuild their DOM (and reset scroll) every tick for data they don't consume.
   if (tab === 'office' || tab === 'dashboard') renderActive()
 })
